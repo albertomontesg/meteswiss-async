@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import unittest
 
-from project_async import Client
+from meteoswiss_async import MeteoSwissClient
 
 
 class ClientTestCase(unittest.IsolatedAsyncioTestCase):
@@ -14,5 +14,5 @@ class ClientTestCase(unittest.IsolatedAsyncioTestCase):
         This defines the expected usage, which can then be used in various test cases.
         Pytest will not execute this code directly, since the function does not contain the suffix "test"
         """
-        client = await Client.with_session(username="foo", password="bar")
+        client = await MeteoSwissClient.with_session(username="foo", password="bar")
         await client.get_foo()
