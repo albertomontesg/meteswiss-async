@@ -7,6 +7,7 @@ __all__ = [
 ]
 
 import abc
+import base64
 import dataclasses
 import enum
 import typing
@@ -33,6 +34,84 @@ class Model(DataClassJsonMixin, abc.ABC):
         dataclasses.dataclass(frozen=True, kw_only=True)(cls)
         dataclass_json(cls, letter_case=LetterCase.CAMEL)
         return cls
+
+
+class Icon(enum.Enum):
+    """Icon representation.
+
+    This is based on the information found in:
+    https://github.com/ms412/meteoswiss/blob/417c10ecbf7af59f856a888296e1cb6698d7fa73/documentation/icons
+    """
+
+    SUNNY = 1
+    OVERCAST_SOME_SLEET = 10
+    CLEAR = 101
+    SLIGHTLY_OVERCAST = 102
+    HEAVY_CLOUD_FORMATIONS = 103
+    OVERCAST = 104
+    VERY_CLOUDY = 105
+    OVERCAST_SCATTERED_SHOWERS = 106
+    OVERCAST_SCATTERED_RAIN = 107
+    OVERCAST_SNOW_SHOWERS = 108
+    OVERCAST_SOME_SNOW_SHOWERS = 11
+    OVERCAST_SOME_RAIN_AND_SNOW_SHOWERS = 110
+    OVERCAST_SOME_SNOW_SHOWERS_2 = 111
+    SLIGHTLY_STORMY = 112
+    STORMS = 113
+    VERY_CLOUDY_LIGHT_RAIN = 114
+    VERY_CLOUDY_LIGHT_RAIN_AND_SNOW_SHOWERS = 115
+    VERY_CLOUDY_LIGHT_SNOWFALL = 116
+    VERY_CLOUDY_INTERMITTENT_RAIN = 117
+    VERY_CLOUDY_INTERMITTENT_MIXED_RAIN = 118
+    VERY_CLOUDY_INTERMITTENT_SNOWFALL = 119
+    SUNNY_INTERVALS_CHANCE_OF_THUNDERSTORMS = 12
+    VERY_CLOUDY_CONSTANT_RAIN = 120
+    VERY_CLOUDY_FREQUENT_RAIN_AND_SNOWFALL = 121
+    VERY_CLOUDY_HEAVY_SNOWFALL = 122
+    VERY_CLOUDY_SLIGHTLY_STORMY = 123
+    VERY_CLOUDY_STORMY = 124
+    VERY_CLOUDY_STORMS = 125
+    HIGH_CLOUD = 126
+    STRATUS = 127
+    FOG = 128
+    SLIGHTLY_OVERCAST_SCATTERED_SHOWERS = 129
+    SUNNY_INTERVALS_POSSIBLE_THUNDERSTORMS = 13
+    SLIGHTLY_OVERCAST_SCATTERED_SNOWFALL = 130
+    SLIGHTLY_OVERCAST_RAIN_AND_SNOW_SHOWERS = 131
+    SLIGHTLY_OVERCAST_SOME_SHOWERS = 132
+    OVERCAST_FREQUENT_SNOW_SHOWERS = 133
+    OVERCAST_FREQUENT_SNOW_SHOWERS_2 = 134
+    OVERCAST_WITH_HIGH_CLOUD = 135
+    VERY_CLOUDY_LIGHT_RAIN_2 = 14
+    VERY_CLOUDY_LIGHT_SLEET = 15
+    VERY_CLOUDY_LIGHT_SNOW_SHOWERS = 16
+    VERY_CLOUDY_INTERMITTENT_RAIN_2 = 17
+    VERY_CLOUDY_INTERMITTENT_SLEET = 18
+    VERY_CLOUDY_INTERMITTENT_SNOW = 19
+    MOSTLY_SUNNY_SOME_CLOUDS = 2
+    VERY_OVERCAST_WITH_RAIN = 20
+    VERY_OVERCAST_WITH_FREQUENT_SLEET = 21
+    VERY_OVERCAST_WITH_HEAVY_SNOW = 22
+    VERY_OVERCAST_SLIGHT_CHANCE_OF_STORMS = 23
+    VERY_OVERCAST_WITH_STORMS = 24
+    VERY_CLOUDY_VERY_STORMY = 25
+    HIGH_CLOUDS = 26
+    STRATUS_2 = 27
+    FOG_2 = 28
+    SUNNY_INTERVALS_SCATTERED_SHOWERS = 29
+    PARTLY_SUNNY_THICK_PASSING_CLOUDS = 3
+    SUNNY_INTERVALS_SCATTERED_SNOW_SHOWERS = 30
+    SUNNY_INTERVALS_SCATTERED_SLEET = 31
+    SUNNY_INTERVALS_SOME_SHOWERS = 32
+    SHORT_SUNNY_INTERVALS_FREQUENT_RAIN = 33
+    SHORT_SUNNY_INTERVALS_FREQUENT_SNOWFALLS = 34
+    OVERCAST_WITH_HIGH_CLOUD_2 = 35
+    OVERCAST_2 = 4
+    VERY_CLOUDY_2 = 5
+    SUNNY_INTERVALS__ISOLATED_SHOWERS = 6
+    SUNNY_INTERVALS_ISOLATED_SLEET = 7
+    SUNNY_INTERVALS_SNOW_SHOWERS = 8
+    OVERCAST_SOME_RAIN_SHOWERS = 9
 
 
 class Condition(enum.StrEnum):
@@ -98,26 +177,26 @@ class Condition(enum.StrEnum):
 
 class CurrentWeather(Model):
     time: TimestampMs
-    icon: int
-    icon_v2: int
+    icon: Icon
+    icon_v2: Icon
     temperature: int
 
     @property
     def condition(self) -> Condition:
-        return Condition.from_icon(self.icon)
+        return Condition.from_icon(self.icon.value)
 
 
 class DayForecast(Model):
     day_date: str
-    icon_day: int
-    icon_day_v2: int
+    icon_day: Icon
+    icon_day_v2: Icon
     temperature_max: int
     temperature_min: int
     precipitation: float
 
     @property
     def condition(self) -> Condition:
-        return Condition.from_icon(self.icon_day)
+        return Condition.from_icon(self.icon_day.value)
 
 
 class WarnType(enum.IntEnum):
@@ -143,26 +222,6 @@ class WarningDetail(WarningOverview):
     valid_to: TimestampMs
     ordering: str
     outlook: bool
-
-
-{
-    "N": [0, 11.25],
-    "NNE": [11.25, 33.75],
-    "NE": [33.75, 56.25],
-    "ENE": [56.25, 78.75],
-    "E": [78.75, 101.25],
-    "ESE": [101.25, 123.75],
-    "SE": [123.75, 146.25],
-    "SSE": [146.25, 168.75],
-    "S": [168.75, 191.25],
-    "SSW": [191.25, 213.75],
-    "SW": [213.75, 236.25],
-    "WSW": [236.25, 258.75],
-    "W": [258.75, 281.25],
-    "WNW": [281.25, 303.75],
-    "NW": [303.75, 326.25],
-    "NNW": [326.25, 348.75],
-}
 
 
 class CardinalDirection(enum.Enum):
@@ -238,8 +297,8 @@ class GraphLite(Model):
 
 class Graph(GraphLite):
     start_low_resolution: TimestampMs
-    weather_icon_3h: list[int]
-    weather_icon_3h_v2: list[int]
+    weather_icon_3h: list[Icon]
+    weather_icon_3h_v2: list[Icon]
     wind_direction_3h: list[int]
     wind_speed_3h: list[float]
     sunrise: list[TimestampMs]
@@ -253,7 +312,9 @@ class Graph(GraphLite):
 
     @property
     def weather_condition_3h(self) -> list[Condition]:
-        return [Condition.from_icon(icon) for icon in self.weather_icon_3h]
+        return [
+            Condition.from_icon(icon.value) for icon in self.weather_icon_3h
+        ]
 
     @property
     def wind_cardinal_direction_3h(self) -> list[CardinalDirection]:
@@ -345,3 +406,19 @@ class Station(Model):
         metadata=config(field_name="Measurements")
     )
     link: str = dataclasses.field(metadata=config(field_name="Link"))
+
+
+class WebcamPreview(Model):
+    station_id: str
+    station_name: str
+    lat: float
+    lon: float
+    preview_base64: str
+
+    @property
+    def preview_image_bytes(self) -> bytes:
+        return base64.b64decode(self.preview_base64)
+
+
+class WebcamPreviews(Model):
+    stations: list[WebcamPreview]

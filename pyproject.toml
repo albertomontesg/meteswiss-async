@@ -47,6 +47,7 @@ dev = [
     "pytest==8.1.1",
     "pytest-github-actions-annotate-failures",
     "pytype",
+    "rich",
     "shellcheck-py==0.10.0.1",
 ]
 

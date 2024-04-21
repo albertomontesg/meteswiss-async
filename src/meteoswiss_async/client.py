@@ -17,6 +17,7 @@ __all__ = [
 
 _METEOSWISS_API_URL = "https://app-prod-ws.meteoswiss-app.ch/v1/"
 _STATIONS_INFORMATION_URL = "https://data.geo.admin.ch/ch.meteoschweiz.messnetz-automatisch/ch.meteoschweiz.messnetz-automatisch_en.csv"
+_PREVIEW_IMAGES = "https://s3-eu-central-1.amazonaws.com/app-prod-static-fra.meteoswiss-app.ch/v1/webcam_overview.json"
 
 
 # TODO: pollen sensor
@@ -36,12 +37,17 @@ class MeteoSwissClient:
         session = aiohttp.ClientSession()
         return cls(session=session, **kwargs)
 
+    async def __aenter__(self) -> "MeteoSwissClient":
+        return self
+
+    async def __aexit__(self, *args) -> None:
+        await self.close()
+
     async def close(self) -> None:
         return await self._session.close()
 
     async def get_weather(self, *, postal_code: str) -> model.Weather:
-        response = await self._session.request(
-            "GET",
+        response = await self._session.get(
             _METEOSWISS_API_URL + "plzDetail",
             params={"plz": f"{postal_code}00"},
         )
@@ -49,7 +55,7 @@ class MeteoSwissClient:
 
     @asyncstdlib.cache
     async def get_stations(self) -> list[model.Station]:
-        response = await self._session.request("GET", _STATIONS_INFORMATION_URL)
+        response = await self._session.get(_STATIONS_INFORMATION_URL)
         content = await response.read()
         stream = io.StringIO(content.decode(encoding="latin_1"))
 
@@ -71,8 +77,7 @@ class MeteoSwissClient:
     async def get_station_information(
         self, *, station_code: str
     ) -> model.StationInformation:
-        response = await self._session.request(
-            "GET",
+        response = await self._session.get(
             _METEOSWISS_API_URL + "stationOverview",
             params={"station": station_code},
         )
@@ -81,11 +86,20 @@ class MeteoSwissClient:
             json_response.get(station_code)
         )
 
+    async def get_current_weather(
+        self, *, station_code: str
+    ) -> model.StationInformation:
+        response = await self._session.get(
+            _METEOSWISS_API_URL + "currentweather",
+            params={"ws": station_code},
+        )
+        json_response = await response.json()
+        return model.StationInformation.from_dict(json_response)
+
     async def get_full_overview(
         self, *, postal_code: list[str], station_code: list[str]
     ) -> model.FullOverview:
-        response = await self._session.request(
-            "GET",
+        response = await self._session.get(
             _METEOSWISS_API_URL + "vorortdetail",
             params={
                 "plz": [f"{pc}00" for pc in postal_code],
@@ -93,3 +107,7 @@ class MeteoSwissClient:
             },
         )
         return model.FullOverview.from_dict(await response.json())
+
+    async def get_webcam_previews(self) -> model.WebcamPreviews:
+        response = await self._session.get(_PREVIEW_IMAGES)
+        return model.WebcamPreviews.from_dict(await response.json())
