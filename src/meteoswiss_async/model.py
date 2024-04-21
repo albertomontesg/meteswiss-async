@@ -9,9 +9,9 @@ __all__ = [
 import abc
 import base64
 import dataclasses
+import datetime
 import enum
 import typing
-from typing import TypeAlias
 
 from dataclasses_json import (
     DataClassJsonMixin,
@@ -20,7 +20,12 @@ from dataclasses_json import (
     dataclass_json,
 )
 
-TimestampMs: TypeAlias = int
+
+class TimestampMs(int):
+
+    def to_datetime(self) -> datetime.datetime:
+        """Convert timestamp into a datetime object."""
+        return datetime.datetime.fromtimestamp(self / 1000.0)
 
 
 @typing.dataclass_transform(kw_only_default=True)
