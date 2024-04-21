@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import functools
 from typing import Self
 
 import aiohttp
@@ -13,6 +12,12 @@ __all__ = [
     "MeteoSwissClient",
 ]
 
+_METEOSWISS_API_URL = "https://app-prod-ws.meteoswiss-app.ch/v1/"
+_STATIONS_INFORMATION_URL = "https://data.geo.admin.ch/ch.meteoschweiz.messnetz-automatisch/ch.meteoschweiz.messnetz-automatisch_en.csv"
+
+
+# TODO: pollen sensor
+
 
 class MeteoSwissClient:
     """Async client for your API.
@@ -20,32 +25,47 @@ class MeteoSwissClient:
     TODO: describe what the client does.
     """
 
-    def __init__(
-        self, *, session: aiohttp.ClientSession, username: str, password: str
-    ):
+    def __init__(self, *, session: aiohttp.ClientSession):
         self._session = session
-        self._username = username
-        self._password = password
 
     @classmethod
     async def with_session(cls, **kwargs) -> Self:
         session = aiohttp.ClientSession()
         return cls(session=session, **kwargs)
 
-    async def maybe_login(self) -> None:
-        """Logic to perform for login or authentication."""
+    async def close(self) -> None:
+        return await self._session.close()
 
-    @staticmethod
-    def authenticated(fn):
+    async def get_weather(self, *, postal_code: str) -> model.Weather:
+        response = await self._session.request(
+            "GET",
+            _METEOSWISS_API_URL + "plzDetail",
+            params={"plz": f"{postal_code}00"},
+        )
+        return model.Weather.from_dict(await response.json())
 
-        @functools.wraps(fn)
-        async def wrapper(self: "MeteoSwissClient", *args, **kwargs):
-            await self.maybe_login()
-            return await fn(self, *args, **kwargs)
+    async def get_station_information(
+        self, *, station_code: str
+    ) -> model.StationInformation:
+        response = await self._session.request(
+            "GET",
+            _METEOSWISS_API_URL + "stationOverview",
+            params={"station": station_code},
+        )
+        json_response = await response.json()
+        return model.StationInformation.from_dict(
+            json_response.get(station_code)
+        )
 
-        return wrapper
-
-    @authenticated
-    async def get_foo(self, *args, **kwargs) -> model.Response:
-        """Method to implement."""
-        return model.Response.from_dict({"id": 1, "fooBar": "foobar"})
+    async def get_full_overview(
+        self, *, postal_code: list[str], station_code: list[str]
+    ) -> model.FullOverview:
+        response = await self._session.request(
+            "GET",
+            _METEOSWISS_API_URL + "vorortdetail",
+            params={
+                "plz": [f"{pc}00" for pc in postal_code],
+                "ws": station_code,
+            },
+        )
+        return model.FullOverview.from_dict(await response.json())
