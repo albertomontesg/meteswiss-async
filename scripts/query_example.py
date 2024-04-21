@@ -19,6 +19,9 @@ async def main():
     )
     print(resp)
 
+    stations = await client.get_stations()
+    print(stations)
+
     await client.close()
 
 

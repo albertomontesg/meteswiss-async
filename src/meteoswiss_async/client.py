@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import csv
+import io
 from typing import Self
 
 import aiohttp
+import asyncstdlib
 
 from . import model
 
@@ -43,6 +46,27 @@ class MeteoSwissClient:
             params={"plz": f"{postal_code}00"},
         )
         return model.Weather.from_dict(await response.json())
+
+    @asyncstdlib.cache
+    async def get_stations(self) -> list[model.Station]:
+        response = await self._session.request("GET", _STATIONS_INFORMATION_URL)
+        content = await response.read()
+        stream = io.StringIO(content.decode(encoding="latin_1"))
+
+        reader = csv.DictReader(stream, delimiter=";")
+        stations: list[model.Station] = []
+        for row in reader:
+            # Skip footer rows.
+            if row["Link"] is None:
+                continue
+            # Handle better missing data.
+            for k in row:
+                if row[k] == "":
+                    row[k] = None
+            # Split this field into a list.
+            row["Measurements"] = row["Measurements"].split(", ")
+            stations.append(model.Station.from_dict(row))
+        return stations
 
     async def get_station_information(
         self, *, station_code: str

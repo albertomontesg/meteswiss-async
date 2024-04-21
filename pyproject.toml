@@ -21,7 +21,11 @@ classifiers = [
 ]
 license = { file = "LICENSE" }
 requires-python = ">=3.11"
-dependencies = ["aiohttp==3.9.4", "dataclasses-json==0.6.4"]
+dependencies = [
+    "aiohttp==3.9.4",
+    "asyncstdlib==3.12.3",
+    "dataclasses-json==0.6.4",
+]
 dynamic = ['version']
 
 [project.optional-dependencies]

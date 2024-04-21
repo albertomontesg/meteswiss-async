@@ -301,3 +301,47 @@ class FullOverview(Model):
     graph: dict[str, GraphLite]
     warnings: dict[str, list[WarningDetail]]
     current_weather: dict[str, StationInformation]
+
+
+class StationType(enum.StrEnum):
+    WEATHER_STATION = "Weather station"
+    PRECIPITATION_STATION = "Precipitation station"
+
+
+class Station(Model):
+    name: str = dataclasses.field(metadata=config(field_name="Station"))
+    code: str = dataclasses.field(metadata=config(field_name="Abbr."))
+    wigos_id: str = dataclasses.field(metadata=config(field_name="WIGOS-ID"))
+    station_type: StationType = dataclasses.field(
+        metadata=config(field_name="Station type")
+    )
+    data_owner: str = dataclasses.field(
+        metadata=config(field_name="Data Owner")
+    )
+    data_since: str = dataclasses.field(
+        metadata=config(field_name="Data since")
+    )
+    station_height: int = dataclasses.field(
+        metadata=config(field_name="Station height m a. sea level")
+    )
+    barometric_altitude: int | None = dataclasses.field(
+        metadata=config(field_name="Barometric altitude m a. ground")
+    )
+    coordinates_east: int = dataclasses.field(
+        metadata=config(field_name="CoordinatesE")
+    )
+    coordinates_north: int = dataclasses.field(
+        metadata=config(field_name="CoordinatesN")
+    )
+    latitude: float = dataclasses.field(metadata=config(field_name="Latitude"))
+    longitude: float = dataclasses.field(
+        metadata=config(field_name="Longitude")
+    )
+    exposition: str = dataclasses.field(
+        metadata=config(field_name="Exposition")
+    )
+    canton: str = dataclasses.field(metadata=config(field_name="Canton"))
+    measurements: list[str] = dataclasses.field(
+        metadata=config(field_name="Measurements")
+    )
+    link: str = dataclasses.field(metadata=config(field_name="Link"))
