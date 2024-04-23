@@ -47,16 +47,16 @@ class MeteoSwissClient:
         return await self._session.close()
 
     async def get_weather(self, *, postal_code: str) -> model.Weather:
-        response = await self._session.get(
+        async with self._session.get(
             _METEOSWISS_API_URL + "plzDetail",
             params={"plz": f"{postal_code}00"},
-        )
-        return model.Weather.from_dict(await response.json())
+        ) as response:
+            return model.Weather.from_dict(await response.json())
 
     @asyncstdlib.cache
     async def get_stations(self) -> list[model.Station]:
-        response = await self._session.get(_STATIONS_INFORMATION_URL)
-        content = await response.read()
+        async with self._session.get(_STATIONS_INFORMATION_URL) as response:
+            content = await response.read()
         stream = io.StringIO(content.decode(encoding="latin_1"))
 
         reader = csv.DictReader(stream, delimiter=";")
@@ -77,11 +77,11 @@ class MeteoSwissClient:
     async def get_station_information(
         self, *, station_code: str
     ) -> model.StationInformation:
-        response = await self._session.get(
+        async with self._session.get(
             _METEOSWISS_API_URL + "stationOverview",
             params={"station": station_code},
-        )
-        json_response = await response.json()
+        ) as response:
+            json_response = await response.json()
         return model.StationInformation.from_dict(
             json_response.get(station_code)
         )
@@ -89,25 +89,24 @@ class MeteoSwissClient:
     async def get_current_weather(
         self, *, station_code: str
     ) -> model.StationInformation:
-        response = await self._session.get(
+        async with self._session.get(
             _METEOSWISS_API_URL + "currentweather",
             params={"ws": station_code},
-        )
-        json_response = await response.json()
-        return model.StationInformation.from_dict(json_response)
+        ) as response:
+            return model.StationInformation.from_dict(await response.json())
 
     async def get_full_overview(
         self, *, postal_code: list[str], station_code: list[str]
     ) -> model.FullOverview:
-        response = await self._session.get(
+        async with self._session.get(
             _METEOSWISS_API_URL + "vorortdetail",
             params={
                 "plz": [f"{pc}00" for pc in postal_code],
                 "ws": station_code,
             },
-        )
-        return model.FullOverview.from_dict(await response.json())
+        ) as response:
+            return model.FullOverview.from_dict(await response.json())
 
     async def get_webcam_previews(self) -> model.WebcamPreviews:
-        response = await self._session.get(_PREVIEW_IMAGES)
-        return model.WebcamPreviews.from_dict(await response.json())
+        async with self._session.get(_PREVIEW_IMAGES) as response:
+            return model.WebcamPreviews.from_dict(await response.json())
