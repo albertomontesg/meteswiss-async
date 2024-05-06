@@ -24,7 +24,7 @@ requires-python = ">=3.11"
 dependencies = [
     "aiohttp==3.9.5",
     "asyncstdlib==3.12.3",
-    "dataclasses-json==0.6.4",
+    "dataclasses-json==0.6.5",
 ]
 dynamic = ['version']
 
